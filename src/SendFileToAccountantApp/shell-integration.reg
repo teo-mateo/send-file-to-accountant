@@ -1,0 +1,7 @@
+﻿Windows Registry Editor Version 5.00
+
+[HKEY_CLASSES_ROOT\*\shell\SendExpenseToAccountant]
+@="Send to Accountant (expense)"
+
+[HKEY_CLASSES_ROOT\*\shell\SendExpenseToAccountant\command]
+@="{{applicationPath}} \"--send\" \"%1\""
