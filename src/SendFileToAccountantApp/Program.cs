@@ -20,7 +20,7 @@ var configuration = new ConfigurationBuilder()
 switch (args)
 {
     case []: 
-        Console.WriteLine("No arguments specified. \r\nUse --install to install the shell integration or --uninstall to uninstall it. \r\nUse --send <file> to send a file.");
+        Console.WriteLine("No arguments specified. \r\nUse --install to install the shell integration or --uninstall to uninstall it. \r\nUse --send <file> to send a file.\r\nUser --status for application status.\r\n");
         return;
     case ["--install"] or ["-i"]:
         Install();
@@ -30,6 +30,9 @@ switch (args)
         return;
     case ["--send", _] or ["-s", _]:
         Send();
+        return;
+    case ["--status"] or ["-a"]:
+        Console.WriteLine("Application status: OK\r\n");
         return;
 }
 
@@ -104,8 +107,16 @@ void Uninstall()
 
 void Send()
 {
-    // if the first argument is not a file path or the file does not exist, throw an exception
+    // prompt for confirmation
     var attachment = args[1].ThrowIfFileNotExists();
+    var filename = Path.GetFileName(attachment);
+    Console.WriteLine($"Are you sure you want to send this file? \r\n\r\n[{filename}] \r\n\r\n(y/n)");
+    var key = Console.ReadKey();
+    if (key.KeyChar != 'y')
+        return;
+    
+    // if the first argument is not a file path or the file does not exist, throw an exception
+    
     var server = configuration["Server"] ?? throw new Exception("Server not specified");
     var port = configuration["Port"] ?? throw new Exception("Port not specified");
     var fromName = configuration["FromName"] ?? throw new Exception("FromName not specified");
@@ -114,19 +125,19 @@ void Send()
     var toAddress = configuration["ToAddress"] ?? throw new Exception("ToAddress not specified");
     var username = configuration["Username"] ?? throw new Exception("Username not specified");
     var password = configuration["Password"] ?? throw new Exception("Password not specified");
-
     var subject = configuration["Subject"] ?? throw new Exception("Subject not specified");
-    
+    var body = configuration["Body"] ?? throw new Exception("Body not specified");
+
     var message = new MimeMessage();
     message.From.Add(new MailboxAddress(fromName, fromAddress));
     message.To.Add(new MailboxAddress(toName, toAddress));
     message.Bcc.Add(new MailboxAddress(fromName, fromAddress));
-    
     message.Subject = subject.Replace("{{filename}}", Path.GetFileName(attachment));
 
     var bodyBuilder = new BodyBuilder
     {
-        HtmlBody = "Heapzilla BV"
+        HtmlBody = $"<p>Heapzilla BV</p>" +
+                   $"<em>{body.Replace("{{filename}}", filename)}</em>"
     };
     bodyBuilder.Attachments.Add(attachment);
     message.Body = bodyBuilder.ToMessageBody();
