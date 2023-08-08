@@ -149,7 +149,7 @@ void Send()
     client.Disconnect(true);
     
     // rename the attachment file by prefixing the filename with (sent YYYY-mm-dd), unless already prefixed
-    var newFilename = $"(sent {DateTime.Now:yyyy-MM-dd}) {Path.GetFileName(attachment)}";
+    var newFilename = $"(sent) {Path.GetFileName(attachment)}";
     if (!Path.GetFileName(attachment).StartsWith("(sent"))
         File.Move(attachment, Path.Combine(Path.GetDirectoryName(attachment)!, newFilename));
     
