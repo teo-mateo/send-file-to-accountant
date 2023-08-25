@@ -107,14 +107,17 @@ void Uninstall()
 
 void Send()
 {
+    var toAddress = configuration["ToAddress"] ?? throw new Exception("ToAddress not specified");
+    
     // prompt for confirmation
     var attachment = args[1].ThrowIfFileNotExists();
     var filename = Path.GetFileName(attachment);
-    Console.WriteLine($"Are you sure you want to send this file? \r\n\r\n[{filename}] \r\n\r\n(y/n)");
+    Console.WriteLine($"Are you sure you want to send this file to {toAddress}? \r\n\r\n[{filename}] \r\n\r\n(y/n) - No ENTER required.");
     var key = Console.ReadKey();
     if (key.KeyChar != 'y')
         return;
     
+    Console.WriteLine("\r\n\r\nSending file...");
     // if the first argument is not a file path or the file does not exist, throw an exception
     
     var server = configuration["Server"] ?? throw new Exception("Server not specified");
@@ -122,7 +125,7 @@ void Send()
     var fromName = configuration["FromName"] ?? throw new Exception("FromName not specified");
     var fromAddress = configuration["FromAddress"] ?? throw new Exception("FromAddress not specified");
     var toName = configuration["ToName"] ?? throw new Exception("ToName not specified");
-    var toAddress = configuration["ToAddress"] ?? throw new Exception("ToAddress not specified");
+    
     var username = configuration["Username"] ?? throw new Exception("Username not specified");
     var password = configuration["Password"] ?? throw new Exception("Password not specified");
     var subject = configuration["Subject"] ?? throw new Exception("Subject not specified");
@@ -148,10 +151,17 @@ void Send()
     client.Send(message);
     client.Disconnect(true);
     
+    
+    
     // rename the attachment file by prefixing the filename with (sent YYYY-mm-dd), unless already prefixed
     var newFilename = $"(sent) {Path.GetFileName(attachment)}";
     if (!Path.GetFileName(attachment).StartsWith("(sent"))
         File.Move(attachment, Path.Combine(Path.GetDirectoryName(attachment)!, newFilename));
     
+    Console.WriteLine($"File sent to {toAddress}.");
+    Console.WriteLine($"File renamed to {newFilename}.");
+    Console.WriteLine("Press any key to exit.");
+    Console.ReadKey();
+
 
 }
