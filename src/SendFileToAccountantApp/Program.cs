@@ -116,52 +116,65 @@ void Send()
     var key = Console.ReadKey();
     if (key.KeyChar != 'y')
         return;
-    
-    Console.WriteLine("\r\n\r\nSending file...");
-    // if the first argument is not a file path or the file does not exist, throw an exception
-    
-    var server = configuration["Server"] ?? throw new Exception("Server not specified");
-    var port = configuration["Port"] ?? throw new Exception("Port not specified");
-    var fromName = configuration["FromName"] ?? throw new Exception("FromName not specified");
-    var fromAddress = configuration["FromAddress"] ?? throw new Exception("FromAddress not specified");
-    var toName = configuration["ToName"] ?? throw new Exception("ToName not specified");
-    
-    var username = configuration["Username"] ?? throw new Exception("Username not specified");
-    var password = configuration["Password"] ?? throw new Exception("Password not specified");
-    var subject = configuration["Subject"] ?? throw new Exception("Subject not specified");
-    var body = configuration["Body"] ?? throw new Exception("Body not specified");
 
-    var message = new MimeMessage();
-    message.From.Add(new MailboxAddress(fromName, fromAddress));
-    message.To.Add(new MailboxAddress(toName, toAddress));
-    message.Bcc.Add(new MailboxAddress(fromName, fromAddress));
-    message.Subject = subject.Replace("{{filename}}", Path.GetFileName(attachment));
-
-    var bodyBuilder = new BodyBuilder
+    try
     {
-        HtmlBody = $"<p>Heapzilla BV</p>" +
-                   $"<em>{body.Replace("{{filename}}", filename)}</em>"
-    };
-    bodyBuilder.Attachments.Add(attachment);
-    message.Body = bodyBuilder.ToMessageBody();
+        Console.WriteLine("\r\n\r\nSending file...");
+        // if the first argument is not a file path or the file does not exist, throw an exception
 
-    using var client = new SmtpClient();
-    client.Connect(server, int.Parse(port), true);
-    client.Authenticate(username, password);
-    client.Send(message);
-    client.Disconnect(true);
-    
-    
-    
-    // rename the attachment file by prefixing the filename with (sent YYYY-mm-dd), unless already prefixed
-    var newFilename = $"(sent) {Path.GetFileName(attachment)}";
-    if (!Path.GetFileName(attachment).StartsWith("(sent"))
-        File.Move(attachment, Path.Combine(Path.GetDirectoryName(attachment)!, newFilename));
-    
-    Console.WriteLine($"File sent to {toAddress}.");
-    Console.WriteLine($"File renamed to {newFilename}.");
-    Console.WriteLine("Press any key to exit.");
-    Console.ReadKey();
+        var server = configuration["Server"] ?? throw new Exception("Server not specified");
+        var port = configuration["Port"] ?? throw new Exception("Port not specified");
+        var fromName = configuration["FromName"] ?? throw new Exception("FromName not specified");
+        var fromAddress = configuration["FromAddress"] ?? throw new Exception("FromAddress not specified");
+        var toName = configuration["ToName"] ?? throw new Exception("ToName not specified");
+
+        var username = configuration["Username"] ?? throw new Exception("Username not specified");
+        var password = configuration["Password"] ?? throw new Exception("Password not specified");
+        var subject = configuration["Subject"] ?? throw new Exception("Subject not specified");
+        var body = configuration["Body"] ?? throw new Exception("Body not specified");
+
+        var message = new MimeMessage();
+        message.From.Add(new MailboxAddress(fromName, fromAddress));
+        message.To.Add(new MailboxAddress(toName, toAddress));
+        message.Bcc.Add(new MailboxAddress(fromName, fromAddress));
+        message.Subject = subject.Replace("{{filename}}", Path.GetFileName(attachment));
+
+        var bodyBuilder = new BodyBuilder
+        {
+            HtmlBody = $"<p>Heapzilla BV</p>" +
+                       $"<em>{body.Replace("{{filename}}", filename)}</em>"
+        };
+        bodyBuilder.Attachments.Add(attachment);
+        message.Body = bodyBuilder.ToMessageBody();
+
+        using var client = new SmtpClient();
+        client.Connect(server, int.Parse(port), true);
+        client.Authenticate(username, password);
+        client.Send(message);
+        client.Disconnect(true);
+
+
+
+        // rename the attachment file by prefixing the filename with (sent YYYY-mm-dd), unless already prefixed
+        var newFilename = $"(sent) {Path.GetFileName(attachment)}";
+        if (!Path.GetFileName(attachment).StartsWith("(sent"))
+            File.Move(attachment, Path.Combine(Path.GetDirectoryName(attachment)!, newFilename));
+
+        Console.WriteLine($"File sent to {toAddress}.");
+        Console.WriteLine($"File renamed to {newFilename}.");
+        Console.WriteLine("Press any key to exit.");
+        Console.ReadKey();
+    }
+    catch (Exception ex)
+    {
+        // write with red
+        Console.ForegroundColor = ConsoleColor.Red;
+        Console.WriteLine(ex.GetType().Name + " " + ex.Message + " " + ex.StackTrace);
+        Console.WriteLine();
+        Console.WriteLine("Press any key to exit.");
+        Console.ReadKey();
+    }
+
 
 
 }
